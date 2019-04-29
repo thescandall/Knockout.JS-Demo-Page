@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<script src="Scripts/knockout-3.5.0.js"></script>
+	<script src="Scripts/jquery-3.3.1.js"></script>
+	<meta charset="utf-8" />
+	<style>
+		.selected{
+			color:red
+		}
+	</style>
+	<script>
+		$(document).ready(function () {
+			$(".btn-delete-account").click(function () {
+				var account = ko.dataFor(this)
+				var context = ko.contextFor(this)
+				
+				alert("Before delete " + context.$parent.Accounts().length)
+				myAccountViewModel.Accounts.remove(account);
+				alert("After delete " + context.$parent.Accounts().length)
+
+			})
+		})
+	</script>
+</head>
+<body>
+	<table>
+		<thead>
+			<tr>
+				<th>S.No</th>
+				<th>Id</th>
+				<th>Name</th>
+				<th>Balance</th>
+			</tr>
+		</thead>
+		<tbody data-bind="foreach:{data: Accounts, as: 'Account'}">
+			<tr style="cursor:pointer" data-bind="click: $parent.SelectAccount, css:{selected:(Account.Id == ($parent.SelectedAccount() == null?-1:$parent.SelectedAccount().Id))}">
+				<td data-bind="text:(($index()+1) + '/' + $parent.Count())"></td>
+				<td data-bind="text:Id"></td>
+				<td data-bind="text:Name"></td>
+				<td data-bind="text:Balance"></td>
+				<td><button data-bind="click: $parent.SelectAccount, clickBubble: false">Select Account</button></td>
+				<td><button data-bind="click: $parent.DeleteAccount, clickBubble: false">Delete Account</button></td>
+				<td><button class="btn-delete-account">Delete Account(Unobstrusive)</button></td>
+			</tr>
+		</tbody>
+	</table>
+	<input type="text" data-bind="value: AmountToTransact" />
+	<button data-bind="click: Deposit">Deposit</button>
+	<button data-bind="click: function(data) {Withdraw(500)}">Withdraw</button>
+
+	<script>
+		function Account(id,name,balance, deposits) {
+			this.Id = id;
+			this.Name = name;
+			this.Balance = ko.observable(balance);
+			this.Deposits = deposits;
+		}
+
+		var myAccountViewModel = new function () {
+
+			var current = this;
+			this.SelectedAccount = ko.observable(null)
+			this.Accounts = ko.observableArray([
+					new Account(1, "a1", 1000),
+					new Account(2, "a2", 2000),
+					new Account(3, "a3", 3000),
+					new Account(4, "a4", 4000)
+		])
+			this.Count = ko.computed(function () {
+				return this.Accounts().length;
+			},this)
+
+			this.SelectAccount = function(account){
+				current.SelectedAccount(account)
+				alert(account.Name)
+			}
+
+			this.AmountToTransact = ko.observable(0)
+			this.Deposit = function () {
+				//alert('Now Depositing...')
+				this.SelectedAccount().Balance(this.SelectedAccount().Balance() + Number(this.AmountToTransact()))
+				//alert('Now Deposited')
+			}
+
+			this.Withdraw = function (minAmount) {
+				if (this.SelectedAccount().Balance() - this.AmountToTransact() < minAmount) 
+					alert("Insufficient Balance");
+					else
+					this.SelectedAccount().Balance(this.SelectedAccount().Balance() - Number(this.AmountToTransact()))	
+			}
+
+			this.DeleteAccount = function(account) {
+				current.Accounts.remove(account);
+			}
+		}
+		ko.applyBindings(myAccountViewModel)
+	</script>
+</body>
+</html>
